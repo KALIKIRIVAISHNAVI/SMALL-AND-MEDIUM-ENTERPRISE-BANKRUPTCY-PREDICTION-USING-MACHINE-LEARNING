@@ -35,28 +35,8 @@ The system is composed of the following functional modules:
 
 ## PROJECT DIRECTORY STRUCTURE
 
-The project repository is organized as follows:
+<img width="541" height="436" alt="image" src="https://github.com/user-attachments/assets/868e6de6-27a2-4c19-b40a-78d1317af6b2" />
 
-SME-Bankruptcy-Prediction/
-│
-├── app.py                   # Main application entry point (Server)
-├── model_trainer.py         # Script for training the XGBoost model
-├── requirements.txt         # List of Python dependencies
-├── .gitignore               # Files to be ignored by Git
-├── README.md                # Project documentation
-│
-├── templates/               # HTML templates for the web interface
-│   ├── index.html           # Home/Upload page
-│   └── result.html          # Prediction results dashboard
-│
-├── static/                  # Static assets (CSS, JavaScript, Images)
-│
-├── models/                  # Serialized machine learning models
-│   ├── xgboost_model.pkl    # Trained XGBoost classifier
-│   └── scaler.pkl           # Saved scaler for data normalization
-│
-└── data/                    # Dataset directory
-    └── financial_data.csv   # Historical financial records used for training
 
 ## DATASET DESCRIPTION
 
@@ -74,6 +54,16 @@ The dataset underwent rigorous preprocessing, including normalization of numeric
 ## OUTPUT AND RESULTS
 
 The system output includes a real-time status display indicating "Solvent" or "High Risk," accompanied by a precise probability percentage. Additionally, users can download a structured PDF report that summarizes the company profile, input ratios, and the final risk assessment.
+
+<img width="1068" height="486" alt="image" src="https://github.com/user-attachments/assets/a3b013a1-2e54-4272-bd20-d67421459c9b" />
+
+<img width="1102" height="688" alt="Screenshot 2025-12-22 233848" src="https://github.com/user-attachments/assets/3de23bf0-de5c-4e6a-8314-c520b8bba0ab" />
+
+<img width="1025" height="868" alt="Screenshot 2025-12-22 233440" src="https://github.com/user-attachments/assets/5a17b201-1ce8-4f24-8a57-4c31e3af951d" />
+
+<img width="1910" height="863" alt="Screenshot 2025-12-19 224838" src="https://github.com/user-attachments/assets/3898ed96-5d3c-4fd7-b619-3cf8d7fd6f79" />
+
+
 
 * **Detection Accuracy:** The model demonstrates high precision (~94%) in identifying potential bankruptcy cases, significantly outperforming traditional statistical methods.
 * **Financial Utility:** Reduces the risk of non-performing loans (NPLs) for financial institutions by providing early warning signals.
