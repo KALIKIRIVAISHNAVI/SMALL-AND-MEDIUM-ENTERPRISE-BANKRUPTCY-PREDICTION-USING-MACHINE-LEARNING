@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SME Bankruptcy Prediction Suite</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        /* --- 1. SBI INSPIRED THEME --- */
+        :root { 
+            --sbi-blue: #280071;      /* Deep Blue */
+            --sbi-cyan: #0091D5;      /* Cyan Accent */
+            --bg-dark: #dfe6e9;       /* Professional Grey Background */
+            --text-dark: #2d3436;
+        }
+
+        body { background-color: var(--bg-dark); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding-bottom: 50px; }
+        
+        .main-card { 
+            border: none; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); 
+            background: #fff; 
+            overflow: hidden; 
+            margin-top: 40px; 
+            border-top: 6px solid var(--sbi-cyan);
+        }
+
+        .header-section { 
+            background: var(--sbi-blue); 
+            color: white; 
+            padding: 30px; 
+            text-align: center; 
+            background: linear-gradient(135deg, #280071 0%, #190046 100%);
+        }
+        
+        /* HEADINGS IN CAPS */
+        .header-section h2 { 
+            font-weight: 800; 
+            text-transform: uppercase; 
+            letter-spacing: 1.5px; 
+            font-size: 1.8rem;
+            margin: 0;
+        }
+        
+        .form-label { font-weight: 700; color: var(--text-dark); font-size: 0.9rem; }
+        .tech-term { font-size: 0.75rem; color: var(--sbi-cyan); font-weight: 700; display: block; margin-bottom: 5px; text-transform: uppercase; }
+        
+        .form-control { border-radius: 5px; border: 1px solid #b2bec3; background-color: #fff; padding: 10px; }
+        .form-control:focus { border-color: var(--sbi-cyan); box-shadow: 0 0 0 3px rgba(0, 145, 213, 0.2); }
+        
+        .btn-predict { 
+            background-color: var(--sbi-blue); 
+            color: white; 
+            border: none; 
+            padding: 15px; 
+            font-weight: 800; 
+            width: 100%; 
+            border-radius: 6px; 
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.3s;
+        }
+        .btn-predict:hover { background-color: #1a004b; color: #fff; box-shadow: 0 5px 15px rgba(40, 0, 113, 0.4); }
+        
+        /* Calculator Button */
+        .calculator-btn { 
+            background-color: var(--sbi-cyan); 
+            color: white; 
+            font-weight: bold; 
+            border: none; 
+            padding: 10px 25px; 
+            border-radius: 50px; 
+            margin-top: -25px; 
+            margin-bottom: 25px; 
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); 
+            transition: all 0.3s;
+        }
+        .calculator-btn:hover { background-color: #007bb5; transform: scale(1.05); }
+
+        /* Result Section */
+        .result-section { 
+            background: #fff; 
+            padding: 40px; 
+            border-radius: 12px; 
+            margin-top: 30px; 
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            border-left: 10px solid var(--sbi-blue);
+        }
+
+        /* --- 2. VISIBLE RANGE SLIDERS --- */
+        input[type=range] {
+            -webkit-appearance: none; 
+            width: 100%; 
+            background: transparent; 
+            margin: 10px 0;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: var(--sbi-blue); /* Visible Blue Thumb */
+            cursor: pointer;
+            margin-top: -8px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 6px;
+            cursor: pointer;
+            background: #b2bec3; /* Darker track for visibility */
+            border-radius: 5px;
+        }
+        
+        .slider-label { display: flex; justify-content: space-between; font-weight: 700; font-size: 0.85rem; margin-top: 15px; color: var(--sbi-blue); }
+        
+        /* PDF Button */
+        .btn-pdf {
+            background-color: #d63031;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 6px;
+            font-weight: 700;
+            margin-top: 20px;
+        }
+        .btn-pdf:hover { background-color: #c0392b; color: white; }
+
+        /* Table Styling for PDF */
+        .summary-table th { background-color: var(--sbi-blue); color: white; }
+        .summary-table td { border-color: #dfe6e9; }
+
+        /* --- 3. PRINT FAIL-SAFE (Ctrl + P) --- */
+        @media print {
+            body * { visibility: hidden; } /* Hide everything */
+            #downloadArea, #downloadArea * { visibility: visible; } /* Show Report */
+            #downloadArea { position: absolute; left: 0; top: 0; width: 100%; margin: 0; border: none; }
+            button, .btn, .no-print { display: none !important; } /* Hide buttons */
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-11">
+            
+            <div class="main-card" id="inputCard">
+                <div class="header-section">
+                    <h2><i class="bi bi-bank2"></i> SME BANKRUPTCY PREDICTION MODEL</h2>
+                </div>
+
+                <div class="card-body p-4">
+                    
+                    <div class="text-center">
+                        <button type="button" class="btn calculator-btn" data-bs-toggle="modal" data-bs-target="#calculatorModal">
+                            <i class="bi bi-calculator-fill"></i> Don't know your Ratios? Click here
+                        </button>
+                    </div>
+
+                    <form action="/predict" method="post" id="predictionForm">
+                        <div class="row g-4">
+                            
+                            <div class="col-md-8">
+                                <h5 class="mb-4 fw-bold" style="color: var(--sbi-blue);">Financial Ratios (Auto-Filled)</h5>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Funds Available for Bills</label>
+                                        <span class="tech-term">Working Capital / Total Assets</span>
+                                        <input type="number" step="any" id="f1" name="feature1" class="form-control" placeholder="0.45" value="{{ request.form.get('feature1', '') }}" required oninput="updateChart()">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Reinvested Profits</label>
+                                        <span class="tech-term">Retained Earnings / Total Assets</span>
+                                        <input type="number" step="any" id="f2" name="feature2" class="form-control" placeholder="0.30" value="{{ request.form.get('feature2', '') }}" required oninput="updateChart()">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Asset Profitability</label>
+                                        <span class="tech-term">EBIT / Total Assets</span>
+                                        <input type="number" step="any" id="f3" name="feature3" class="form-control" placeholder="0.15" value="{{ request.form.get('feature3', '') }}" required oninput="updateChart()">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Debt Coverage</label>
+                                        <span class="tech-term">Current Ratio</span>
+                                        <input type="number" step="any" id="f4" name="feature4" class="form-control" placeholder="1.5" value="{{ request.form.get('feature4', '') }}" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Reliance on Borrowing</label>
+                                        <span class="tech-term">Total Debt / Total Assets</span>
+                                        <input type="number" step="any" id="f5" name="feature5" class="form-control" placeholder="0.40" value="{{ request.form.get('feature5', '') }}" required oninput="updateChart()">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Unsold Stock Level</label>
+                                        <span class="tech-term">Inventory / Sales</span>
+                                        <input type="number" step="any" id="f6" name="feature6" class="form-control" placeholder="0.20" value="{{ request.form.get('feature6', '') }}" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Cash Position</label>
+                                        <span class="tech-term">Cash / Sales</span>
+                                        <input type="number" step="any" id="f7" name="feature7" class="form-control" placeholder="0.10" value="{{ request.form.get('feature7', '') }}" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Sales Speed</label>
+                                        <span class="tech-term">Total Asset Turnover</span>
+                                        <input type="number" step="any" id="f8" name="feature8" class="form-control" placeholder="1.25" value="{{ request.form.get('feature8', '') }}" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 d-flex flex-column align-items-center justify-content-center bg-light rounded-3 p-3 border">
+                                <h6 class="text-center fw-bold mb-3" style="color: var(--sbi-blue);">Live Company Profile</h6>
+                                <canvas id="radarChart"></canvas>
+                            </div>
+
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-predict shadow-sm">PREDICT RISK STATUS</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% if prediction_text %}
+            
+            <div id="downloadArea">
+                <div class="result-section">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h4 class="text-secondary small text-uppercase fw-bold mb-2">Analysis Result</h4>
+                            <h2 class="alert-heading text-{{ alert_color }} fw-bold mb-3">
+                                {% if alert_color == 'danger' %} <i class="bi bi-exclamation-triangle-fill"></i> {% else %} <i class="bi bi-check-circle-fill"></i> {% endif %}
+                                {{ prediction_text }}
+                            </h2>
+                            <p class="mb-1 text-dark">{{ explanation }}</p>
+                        </div>
+                        <div class="col-md-4 text-center border-start">
+                            <h1 class="display-3 fw-bold text-{{ alert_color }}">{{ risk_score }}%</h1>
+                            <small class="text-uppercase fw-bold text-muted">Bankruptcy Probability</small>
+                        </div>
+                    </div>
+                    
+                    <div class="progress mt-4" style="height: 25px;">
+                        <div class="progress-bar bg-{{ alert_color }} progress-bar-striped progress-bar-animated" role="progressbar" style="width: {{ risk_score }}%"></div>
+                    </div>
+                    
+                    <hr class="my-4">
+
+                    <div class="mb-4">
+                        <h5 class="fw-bold" style="color: var(--sbi-blue);">Input Financial Summary</h5>
+                        <table class="table table-sm table-bordered summary-table mt-2" style="font-size: 0.9rem;">
+                            <thead class="table-dark" style="background-color: var(--sbi-blue);">
+                                <tr>
+                                    <th style="width: 70%;">Financial Ratio</th>
+                                    <th style="width: 30%;">Recorded Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Working Capital / Total Assets</td> <td>{{ request.form.get('feature1') }}</td></tr>
+                                <tr><td>Retained Earnings / Total Assets</td> <td>{{ request.form.get('feature2') }}</td></tr>
+                                <tr><td>EBIT / Total Assets</td> <td>{{ request.form.get('feature3') }}</td></tr>
+                                <tr><td>Current Ratio</td> <td>{{ request.form.get('feature4') }}</td></tr>
+                                <tr><td>Total Debt / Total Assets</td> <td>{{ request.form.get('feature5') }}</td></tr>
+                                <tr><td>Inventory / Sales</td> <td>{{ request.form.get('feature6') }}</td></tr>
+                                <tr><td>Cash / Sales</td> <td>{{ request.form.get('feature7') }}</td></tr>
+                                <tr><td>Total Asset Turnover</td> <td>{{ request.form.get('feature8') }}</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="p-4 bg-light rounded border border-secondary-subtle">
+                        <h5 class="fw-bold" style="color: var(--sbi-blue);"><i class="bi bi-sliders"></i> Risk Simulator</h5>
+                        <p class="small text-muted mb-4">Adjust factors to see potential improvements.</p>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label class="slider-label">Increase Liquidity <span id="val1">0.0</span></label>
+                                <input type="range" min="0" max="1" step="0.05" id="sim1" oninput="updateSim()">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="slider-label">Increase Profit <span id="val2">0.0</span></label>
+                                <input type="range" min="0" max="1" step="0.05" id="sim2" oninput="updateSim()">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="slider-label">Reduce Debt <span id="val3">0.0</span></label>
+                                <input type="range" min="0" max="1" step="0.05" id="sim3" oninput="updateSim()">
+                            </div>
+                        </div>
+                        
+                        <div class="text-center mt-3 p-3 bg-white rounded shadow-sm">
+                            <span class="text-muted fw-bold">Simulated Risk Score: </span>
+                            <span class="fw-bold fs-4" id="simScoreText" style="color: var(--sbi-blue);">--%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-end mt-3">
+                <button onclick="downloadReport()" class="btn btn-pdf shadow">
+                    <i class="bi bi-file-earmark-pdf-fill"></i> Download Official Report
+                </button>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="calculatorModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header text-white" style="background-color: var(--sbi-blue);">
+                <h5 class="modal-title">Helper: Calculate from Balance Sheet</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body bg-light">
+                <p class="text-muted small">Enter the raw values from your financial statements (in Rupees ₹).</p>
+                <div class="row g-3">
+                    <div class="col-md-4"><label class="form-label">Total Assets (₹)</label><input type="number" id="raw_TA" class="form-control" placeholder="₹ 50000"></div>
+                    <div class="col-md-4"><label class="form-label">Current Assets (₹)</label><input type="number" id="raw_CA" class="form-control" placeholder="₹ 20000"></div>
+                    <div class="col-md-4"><label class="form-label">Current Liabilities (₹)</label><input type="number" id="raw_CL" class="form-control" placeholder="₹ 15000"></div>
+                    <div class="col-md-4"><label class="form-label">Total Debt (₹)</label><input type="number" id="raw_TD" class="form-control" placeholder="₹ 25000"></div>
+                    <div class="col-md-4"><label class="form-label">Total Sales (₹)</label><input type="number" id="raw_Sales" class="form-control" placeholder="₹ 60000"></div>
+                    <div class="col-md-4"><label class="form-label">Net Profit/EBIT (₹)</label><input type="number" id="raw_EBIT" class="form-control" placeholder="₹ 8000"></div>
+                    <div class="col-md-4"><label class="form-label">Retained Earnings (₹)</label><input type="number" id="raw_RE" class="form-control" placeholder="₹ 10000"></div>
+                    <div class="col-md-4"><label class="form-label">Inventory (₹)</label><input type="number" id="raw_Inv" class="form-control" placeholder="₹ 12000"></div>
+                    <div class="col-md-4"><label class="form-label">Cash (₹)</label><input type="number" id="raw_Cash" class="form-control" placeholder="₹ 5000"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn text-white" style="background-color: var(--sbi-cyan);" onclick="calculateAndFill()">Calculate & Auto-Fill</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // --- 1. RADAR CHART ---
+    const ctxRadar = document.getElementById('radarChart').getContext('2d');
+    let radarChart = new Chart(ctxRadar, {
+        type: 'radar',
+        data: {
+            labels: ['Liquidity', 'Profit', 'EBIT', 'Debt'],
+            datasets: [{ label: 'Profile', data: [0.1, 0.1, 0.1, 0.1], backgroundColor: 'rgba(0, 145, 213, 0.2)', borderColor: '#0091D5', borderWidth: 2 }]
+        },
+        options: { scales: { r: { suggestMin: 0, suggestMax: 1 } }, plugins: { legend: { display: false } } }
+    });
+
+    function updateChart() {
+        let v1 = parseFloat(document.getElementById('f1').value) || 0;
+        let v2 = parseFloat(document.getElementById('f2').value) || 0;
+        let v3 = parseFloat(document.getElementById('f3').value) || 0;
+        let v5 = parseFloat(document.getElementById('f5').value) || 0.5;
+        radarChart.data.datasets[0].data = [v1, v2, v3, 1 - v5];
+        radarChart.update();
+    }
+
+    // --- 2. CALCULATOR LOGIC ---
+    function calculateAndFill() {
+        let ta = parseFloat(document.getElementById('raw_TA').value) || 1;
+        let ca = parseFloat(document.getElementById('raw_CA').value) || 0;
+        let cl = parseFloat(document.getElementById('raw_CL').value) || 1;
+        let td = parseFloat(document.getElementById('raw_TD').value) || 0;
+        let sales = parseFloat(document.getElementById('raw_Sales').value) || 1;
+        let ebit = parseFloat(document.getElementById('raw_EBIT').value) || 0;
+        let re = parseFloat(document.getElementById('raw_RE').value) || 0;
+        let inv = parseFloat(document.getElementById('raw_Inv').value) || 0;
+        let cash = parseFloat(document.getElementById('raw_Cash').value) || 0;
+
+        let wc = ca - cl;
+        
+        document.getElementById('f1').value = (wc / ta).toFixed(4);
+        document.getElementById('f2').value = (re / ta).toFixed(4);
+        document.getElementById('f3').value = (ebit / ta).toFixed(4);
+        document.getElementById('f4').value = (ca / cl).toFixed(4);
+        document.getElementById('f5').value = (td / ta).toFixed(4);
+        document.getElementById('f6').value = (inv / sales).toFixed(4);
+        document.getElementById('f7').value = (cash / sales).toFixed(4);
+        document.getElementById('f8').value = (sales / ta).toFixed(4);
+
+        updateChart();
+        bootstrap.Modal.getInstance(document.getElementById('calculatorModal')).hide();
+    }
+
+    // --- 3. SIMULATOR LOGIC ---
+    function updateSim() {
+        let s1 = parseFloat(document.getElementById('sim1').value) || 0;
+        let s2 = parseFloat(document.getElementById('sim2').value) || 0;
+        let s3 = parseFloat(document.getElementById('sim3').value) || 0;
+
+        document.getElementById('val1').innerText = "+" + s1;
+        document.getElementById('val2').innerText = "+" + s2;
+        document.getElementById('val3').innerText = "-" + s3;
+        
+        let baseRisk = 75; // Demo baseline
+        let reduction = (s1 * 30) + (s2 * 40) + (s3 * 20);
+        let newRisk = Math.round(baseRisk - reduction);
+        if(newRisk < 5) newRisk = 5;
+
+        let textEl = document.getElementById('simScoreText');
+        textEl.innerText = newRisk + "%";
+        textEl.style.color = newRisk > 50 ? "#e74c3c" : "#27ae60";
+    }
+
+    // --- 4. FIXED PDF DOWNLOAD ---
+    function downloadReport() {
+        const element = document.getElementById('downloadArea');
+        const opt = {
+            margin:       [0.3, 0.3, 0.3, 0.3],
+            filename:     'SME_Bankruptcy_Report.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { 
+                scale: 2, 
+                scrollY: 0,     // <--- FIXES BLANK PAGE
+                useCORS: true 
+            },
+            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(element).save();
+    }
+</script>
+
+</body>
+</html>
